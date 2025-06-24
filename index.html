@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visualizador de Dados em Tempo Real</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .chart-container { width: 80%; max-width: 900px; }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <canvas id="realtimeChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('realtimeChart').getContext('2d');
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // IDs sequenciais
+                datasets: [{
+                    label: 'Random Number Value',
+                    data: [], // Valores dos números aleatórios
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Sequential ID'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        },
+                        beginAtZero: true
+                    }
+                },
+                animation: {
+                    duration: 500
+                }
+            }
+        });
+
+        const ws = new WebSocket("ws://localhost:8000/ws");
+
+        ws.onmessage = function(event) {
+            const dataPoints = JSON.parse(event.data);
+            
+            dataPoints.forEach(point => {
+                // Adiciona novos dados ao gráfico
+                chart.data.labels.push(point.id);
+                chart.data.datasets[0].data.push(point.value);
+
+                // Limita o número de pontos no gráfico para não sobrecarregar
+                const maxDataPoints = 50;
+                if (chart.data.labels.length > maxDataPoints) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                }
+            });
+
+            chart.update(); // Atualiza o gráfico para mostrar os novos dados
+        };
+
+        ws.onopen = function(event) {
+            console.log("Conexão WebSocket estabelecida.");
+        };
+
+        ws.onerror = function(event) {
+            console.error("Erro no WebSocket: ", event);
+        };
+
+        ws.onclose = function(event) {
+            console.log("Conexão WebSocket fechada.");
+        };
+
+    </script>
+</body>
+</html>

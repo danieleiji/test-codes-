@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+virtualenv/
+virt/
+env/
+venv/
+.venv/
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.Trashes
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# Jupyter Notebook files
+.ipynb_checkpoints
+
+# pytest cache
+.pytest_cache/
+
+# dist and build folders
+dist/
+build/
+*.egg-info/
+
+# Cassandra driver specific
+*.cqlshrc

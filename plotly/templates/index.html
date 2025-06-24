@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visualizador de Dados em Tempo Real com Plotly</title>
+    <!-- Inclui a biblioteca Plotly a partir de um CDN -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .chart-container { width: 80%; max-width: 900px; }
+    </style>
+</head>
+<body>
+    <div class="chart-container">
+        <div id="realtimeChart"></div>
+    </div>
+
+    <script>
+        const chartDiv = document.getElementById('realtimeChart');
+
+        // Inicializa o gráfico Plotly com dados vazios
+        Plotly.newPlot(chartDiv, [{
+            x: [],
+            y: [],
+            mode: 'lines',
+            line: { color: 'rgb(75, 192, 192)' }
+        }], {
+            title: 'Visualização de Dados em Tempo Real com Plotly',
+            xaxis: { title: 'ID Sequencial' },
+            yaxis: { title: 'Valor', range: [0, 1000] } // Ajuste o range conforme necessário
+        });
+
+        const ws = new WebSocket("ws://localhost:8000/ws");
+
+        const maxDataPoints = 50;
+
+        ws.onmessage = function(event) {
+            const dataPoints = JSON.parse(event.data);
+            
+            const newX = [];
+            const newY = [];
+
+            dataPoints.forEach(point => {
+                newX.push(point.id);
+                newY.push(point.value);
+            });
+
+            // Adiciona os novos pontos ao gráfico
+            Plotly.extendTraces(chartDiv, { x: [newX], y: [newY] }, [0]);
+
+            // Mantém o número de pontos no gráfico limitado
+            const currentTraces = chartDiv.data[0];
+            if (currentTraces.x.length > maxDataPoints) {
+                Plotly.restyle(chartDiv, {
+                    x: [currentTraces.x.slice(currentTraces.x.length - maxDataPoints)],
+                    y: [currentTraces.y.slice(currentTraces.y.length - maxDataPoints)]
+                });
+            }
+        };
+
+        ws.onopen = function(event) {
+            console.log("Conexão WebSocket estabelecida.");
+        };
+
+        ws.onerror = function(event) {
+            console.error("Erro no WebSocket: ", event);
+        };
+
+        ws.onclose = function(event) {
+            console.log("Conexão WebSocket fechada.");
+        };
+    </script>
+</body>
+</html>
